@@ -105,7 +105,7 @@ public class TransactionController : ControllerBase
         return CreatedAtAction(nameof(Post), new { id = transaction.Id }, transaction);
     }
     
-    [HttpDelete]
+    [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(Guid id)
     {
         var transaction = await _context.Transactions.FindAsync(id);

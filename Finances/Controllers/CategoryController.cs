@@ -87,7 +87,7 @@ public class CategoryController : ControllerBase
         return CreatedAtAction(nameof(Post), new { id = user.Id }, user);
     }
 
-    [HttpDelete]
+    [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(Guid id)
     {
         var category = await _context.Categories.FindAsync(id);

@@ -76,7 +76,7 @@ public class WalletController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = wallet.Id }, wallet);
     }
 
-    [HttpDelete]
+    [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(Guid id)
     {
         var wallet = await _context.Wallets.FindAsync(id);
