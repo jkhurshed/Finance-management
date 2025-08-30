@@ -24,11 +24,11 @@ public class UserController : ControllerBase
         };
 
     [HttpGet]
-    public async Task<IEnumerable<UserGetDto>> Get()
+    public async Task<ActionResult<List<UserGetDto>>> Get()
     {
-        return await _context.Users
+        return Ok(await _context.Users
             .Select(x => UserToDto(x))
-            .ToListAsync();
+            .ToListAsync());
     }
     
     [HttpGet("{id}")]
@@ -73,7 +73,7 @@ public class UserController : ControllerBase
     [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Delete(int id)
+    public async Task<IActionResult> Delete(Guid id)
     {
         var userDelete = await _context.Users.FindAsync(id);
         if (userDelete == null) return NotFound();
