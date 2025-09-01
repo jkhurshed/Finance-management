@@ -64,7 +64,7 @@ public class TransactionController : ControllerBase
         {
             return  BadRequest("Amount is less then wallet amount!");
         }
-        transaction.Description = transactionDto.Description;
+        transaction.Title = transactionDto.Title;
         transaction.Amount = transactionDto.Amount;
         transaction.TransactionType = transactionDto.Type;
         transaction.CategoryId = transactionDto.CategoryId;
@@ -90,13 +90,14 @@ public class TransactionController : ControllerBase
 
         var transaction = new TransactionEntity()
         {
-            Description = transactionDto.Description,
+            Title = transactionDto.Title,
             Amount = transactionDto.Amount,
             TransactionType = transactionDto.Type,
             IsActive = transactionDto.IsActive,
             WalletId = transactionDto.WalletId,
             CategoryId = transactionDto.CategoryId,
-            CreatedAt = transactionDto.Date
+            CreatedAt = transactionDto.Date,
+            Description = transactionDto.Description
         };
         wallet.Balance -= transaction.Amount;
         

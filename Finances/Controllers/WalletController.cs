@@ -1,3 +1,4 @@
+using System.Net;
 using Finances.DTOs;
 using Finances.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -62,6 +63,8 @@ public class WalletController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<WalletEntity>> Post(WalletCreateDto walletDto)
     {
+        var user = await _context.Users.FindAsync(walletDto.UserId);
+        if (user == null) return NotFound("User not found!");
         var wallet = new WalletEntity
         {
             Title = walletDto.Title,
