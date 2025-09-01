@@ -181,3 +181,5 @@ C:\Users\user\Desktop\c# code\FinanceManagement\Finances\obj\Debug\net9.0\compre
 C:\Users\user\Desktop\c# code\FinanceManagement\Finances\obj\Debug\net9.0\compressed\7veg2cnhqb-k96zq0762m.gz
 C:\Users\user\Desktop\c# code\FinanceManagement\Finances\bin\Debug\net9.0\AutoMapper.dll
 C:\Users\user\Desktop\c# code\FinanceManagement\Finances\obj\Debug\net9.0\Finances.sourcelink.json
+C:\Users\user\Desktop\c# code\FinanceManagement\Finances\bin\Debug\net9.0\Finances.xml
+C:\Users\user\Desktop\c# code\FinanceManagement\Finances\obj\Debug\net9.0\Finances.xml

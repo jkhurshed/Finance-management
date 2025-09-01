@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Finances;
 using Microsoft.OpenApi.Models;
+using System.Reflection;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,12 +20,18 @@ builder.Services.AddAutoMapper(cfg => cfg.AddProfile<MappingProfile>());
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
-    c.SwaggerDoc("v1", new OpenApiInfo 
-    { 
-        Title = "My API", 
+{
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "My API",
         Version = "v1",
         Description = "API with EF Core Integration"
-    }));
+    });
+
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    c.IncludeXmlComments(xmlPath);
+});
 
 //builder.Services.AddCoreAdmin();
 

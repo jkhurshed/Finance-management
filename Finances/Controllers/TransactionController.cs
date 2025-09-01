@@ -31,6 +31,9 @@ public class TransactionController : ControllerBase
             CategoryTitle = categoryTitle
         };
     
+    /// <summary>
+    /// Get all existing transactions
+    /// </summary>
     [HttpGet]
     public async Task<IEnumerable<TransactionGetDto>> Get()
     {
@@ -42,6 +45,11 @@ public class TransactionController : ControllerBase
         ).ToList();
     }
 
+    /// <summary>
+    /// Provide transaction id to see detail info about this transaction
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
     [HttpGet("{id}")]
     public async Task<ActionResult<TransactionGetDto>> GetById(Guid id)
     {
@@ -55,6 +63,11 @@ public class TransactionController : ControllerBase
         return TransactionToDto(transaction, categories.GetValueOrDefault(transaction.CategoryId));
     }
 
+    /// <summary>
+    /// Provide transaction id to update the transaction.
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
     [HttpPut("{id}")]
     public async Task<ActionResult<TransactionCreateDto>> Put(Guid id, TransactionCreateDto transactionDto)
     {
@@ -72,6 +85,9 @@ public class TransactionController : ControllerBase
         return Ok(transaction);
     }
 
+    /// <summary>
+    /// Create transaction
+    /// </summary>
     [HttpPost]
     public async Task<ActionResult<TransactionEntity>> Post(TransactionCreateDto transactionDto)
     {
@@ -106,6 +122,10 @@ public class TransactionController : ControllerBase
         return CreatedAtAction(nameof(Post), new { id = transaction.Id }, transaction);
     }
     
+    /// <summary>
+    /// Deleting transaction by its id
+    /// </summary>
+    /// <param name="id"></param>
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(Guid id)
     {
@@ -115,4 +135,32 @@ public class TransactionController : ControllerBase
         await _context.SaveChangesAsync();
         return NoContent();
     }
+
+    /// <summary>
+    /// get transactions by wallet and month
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    [HttpGet("statistics/{id}")]
+    public async Task<IActionResult> GetStatistics(Guid id)
+    {
+        var result = await _context.Transactions
+            .Where(t => t.WalletId == id)
+            .GroupBy(t => new
+            {
+                t.WalletId,
+                t.UpdatedAt.Value.Year,
+                t.UpdatedAt.Value.Month
+            })
+            .Select(g => new TransactionStatisticsDto
+            {
+                WalletID = g.Key.WalletId,
+                Year =g.Key.Year,
+                Month =g.Key.Month,
+                Total = g.Sum(t => t.Amount)
+            }).ToListAsync();
+        
+        return Ok(result);
+    }
+
 }
