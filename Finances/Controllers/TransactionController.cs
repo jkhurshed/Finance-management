@@ -1,5 +1,6 @@
 using Finances.DTOs;
 using Finances.Models;
+using Finances.Models.Enums;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,7 +18,7 @@ public class TransactionController : ControllerBase
     }
 
     private static TransactionGetDto TransactionToDto(TransactionEntity transaction, string categoryTitle) =>
-        new TransactionGetDto()
+        new TransactionGetDto
         {
             Id = transaction.Id,
             Title = transaction.Title,
@@ -40,9 +41,15 @@ public class TransactionController : ControllerBase
         var transactions = await _context.Transactions.ToListAsync();
         var categories = await _context.Categories
             .ToDictionaryAsync(x => x.Id, x => x.Title);
+        
         return transactions.Select(t =>
-            TransactionToDto(t, categories.GetValueOrDefault(t.CategoryId))
-        ).ToList();
+        {
+            var categoryTitle = t.CategoryId.HasValue
+                ? categories.GetValueOrDefault(t.CategoryId.Value, "Uncategorized")
+                : "Uncategorized";
+
+            return TransactionToDto(t, categoryTitle);
+        }).ToList();
     }
 
     /// <summary>
@@ -60,7 +67,12 @@ public class TransactionController : ControllerBase
         {
             return NotFound();
         }
-        return TransactionToDto(transaction, categories.GetValueOrDefault(transaction.CategoryId));
+        
+        var categoryTitle = transaction.CategoryId.HasValue
+            ? categories.GetValueOrDefault(transaction.CategoryId.Value, "Uncategorized")
+            : "Uncategorized";
+        
+        return TransactionToDto(transaction, categoryTitle);
     }
 
     /// <summary>
@@ -96,7 +108,7 @@ public class TransactionController : ControllerBase
         
         if (transactionDto.Amount <= 0)
         {
-            return BadRequest("Amount is less then wallet amount!");
+            return BadRequest("You can't create transaction with amount less then 0!");
         }
 
         if (transactionDto.Amount > wallet.Balance)
@@ -115,8 +127,19 @@ public class TransactionController : ControllerBase
             CreatedAt = transactionDto.Date,
             Description = transactionDto.Description
         };
-        wallet.Balance -= transaction.Amount;
         
+        //Decreasing an amount of money if a transaction type is "Expense"
+        if (transactionDto.Type == TransactionType.Expense)
+        {
+            wallet.Balance -= transaction.Amount;
+        }
+
+        //Increasing the amount of money if a transaction type is "Income" 
+        if (transactionDto.Type == TransactionType.Income)
+        {
+            wallet.Balance += transaction.Amount;
+        }
+
         await _context.Transactions.AddAsync(transaction);
         await _context.SaveChangesAsync();
         return CreatedAtAction(nameof(Post), new { id = transaction.Id }, transaction);
@@ -147,7 +170,8 @@ public class TransactionController : ControllerBase
         var result = await _context.Transactions
             .Where(t => t.Wallet.UserId == requestDto.UserID &&
                         t.CreatedAt.Month == requestDto.Month &&
-                        t.CreatedAt.Year == requestDto.Year)
+                        t.CreatedAt.Year == requestDto.Year &&
+                        t.TransactionType == TransactionType.Expense)
             .GroupBy(t => new { t.Category.Id, t.Category.Title })
             .Select(g => new TransactionStatisticsResponseDtoDetail
             {

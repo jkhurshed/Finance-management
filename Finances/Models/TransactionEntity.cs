@@ -11,6 +11,6 @@ public class TransactionEntity : BaseTitleDescriptionEntity
     public Guid WalletId { get; set; }
     public WalletEntity Wallet { get; set; }
     
-    public Guid CategoryId { get; set; }
-    public CategoryEntity Category { get; set; }
+    public Guid? CategoryId { get; set; }
+    public CategoryEntity? Category { get; set; }
 }

@@ -11,7 +11,7 @@ public class TransactionGetDto
     public TransactionType TransactionType { get; set; }
     public bool IsActive { get; set; }
     public Guid WalletId { get; set; }
-    public Guid CategoryId { get; set; }
+    public Guid? CategoryId { get; set; }
     public string CategoryTitle { get; set; }
     public DateTime? Date { get; set; }
 }

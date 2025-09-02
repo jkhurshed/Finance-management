@@ -10,6 +10,6 @@ public class TransactionCreateDto
     public TransactionType Type { get; set; }
     public bool IsActive { get; set; }
     public Guid WalletId { get; set; }
-    public Guid CategoryId { get; set; }
+    public Guid? CategoryId { get; set; }
     public string? Description { get; set; }
 }
