@@ -123,7 +123,7 @@ public class TransactionController : ControllerBase
     }
     
     /// <summary>
-    /// Deleting transaction by its id
+    /// Deleting a transaction by its id
     /// </summary>
     /// <param name="id"></param>
     [HttpDelete("{id}")]
@@ -137,30 +137,35 @@ public class TransactionController : ControllerBase
     }
 
     /// <summary>
-    /// get transactions by wallet and month
+    /// get transactions by user and month
     /// </summary>
     /// <param name="id"></param>
     /// <returns></returns>
-    [HttpGet("statistics/{id}")]
-    public async Task<IActionResult> GetStatistics(Guid id)
+    [HttpGet("statistics")]
+    public async Task<ActionResult<TransactionStatisticsResponseDto>> GetStatistics([FromQuery]TransactionStatisticsRequestDto requestDto)
     {
         var result = await _context.Transactions
-            .Where(t => t.WalletId == id)
-            .GroupBy(t => new
+            .Where(t => t.Wallet.UserId == requestDto.UserID &&
+                        t.CreatedAt.Month == requestDto.Month &&
+                        t.CreatedAt.Year == requestDto.Year)
+            .GroupBy(t => new { t.Category.Id, t.Category.Title })
+            .Select(g => new TransactionStatisticsResponseDtoDetail
             {
-                t.WalletId,
-                t.UpdatedAt.Value.Year,
-                t.UpdatedAt.Value.Month
+                CategoryID = g.Key.Id,
+                CategoryName = g.Key.Title,
+                CategoryAmount = g.Sum(t => t.Amount)
             })
-            .Select(g => new TransactionStatisticsDto
-            {
-                WalletID = g.Key.WalletId,
-                Year =g.Key.Year,
-                Month =g.Key.Month,
-                Total = g.Sum(t => t.Amount)
-            }).ToListAsync();
-        
-        return Ok(result);
-    }
+            .ToListAsync();
 
+        var response = new TransactionStatisticsResponseDto()
+        {
+            TotalAmount = result.Sum(r => r.CategoryAmount),
+            Details = result,
+            Year = requestDto.Year,
+            Month = requestDto.Month,
+            UserID = requestDto.UserID
+        };
+        
+        return Ok(response);
+    }
 }
