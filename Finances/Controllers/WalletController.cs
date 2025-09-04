@@ -29,6 +29,9 @@ public class WalletController : ControllerBase
             UserId = wallet.UserId
         };
 
+    /// <summary>
+    /// Get all existing wallets
+    /// </summary>
     [HttpGet]
     public async Task<IEnumerable<WalletGetDto>> Get()
     {
@@ -37,6 +40,11 @@ public class WalletController : ControllerBase
             .ToListAsync();
     }
 
+    /// <summary>
+    /// Provide wallet id to see detail info about this wallet.
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
     [HttpGet("{id}")]
     public async Task<ActionResult<WalletGetDto>> GetById(Guid id)
     {
@@ -45,6 +53,11 @@ public class WalletController : ControllerBase
         return WalletToDto(wallet);
     }
 
+    /// <summary>
+    /// Provide wallet id to update the wallet.
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
     [HttpPut("{id}")]
     public async Task<ActionResult<WalletCreateDto>> Put(Guid id, WalletCreateDto wallet)
     {
@@ -60,6 +73,9 @@ public class WalletController : ControllerBase
         return Ok(user);
     }
 
+    /// <summary>
+    /// Create wallets
+    /// </summary>
     [HttpPost]
     public async Task<ActionResult<WalletEntity>> Post(WalletCreateDto walletDto)
     {
@@ -79,6 +95,10 @@ public class WalletController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = wallet.Id }, wallet);
     }
 
+    /// <summary>
+    /// Deleting a wallet by its id
+    /// </summary>
+    /// <param name="id"></param>
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(Guid id)
     {
@@ -87,5 +107,29 @@ public class WalletController : ControllerBase
         _context.Wallets.Remove(wallet);
         await _context.SaveChangesAsync();
         return NoContent();
+    }
+    
+    /// <summary>
+    /// Get all the users wallet by providing user id
+    /// </summary>
+    /// <param name="id"></param>
+    [HttpGet("UserWallets/{id}")]
+    public async Task<ActionResult<WalletEntity>> GetUsersWallet(Guid id)
+    {
+        var wallet = await _context.Wallets
+            .Where(w => w.UserId == id)
+            .Select(w => new WalletGetDto
+            {
+                Id = w.Id,
+                Title = w.Title,
+                Description = w.Description,
+                AccountType = w.AccountType,
+                Balance = w.Balance,
+                Currency = w.Currency,
+                UserId = w.UserId
+            })
+            .ToListAsync();
+        
+        return Ok(wallet);
     }
 }

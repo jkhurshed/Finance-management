@@ -8,15 +8,8 @@ namespace Finances.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class TransactionController : ControllerBase
+public class TransactionController(AppDbContext context) : ControllerBase
 {
-    private readonly AppDbContext _context;
-
-    public TransactionController(AppDbContext context)
-    {
-        _context = context;
-    }
-
     private static TransactionGetDto TransactionToDto(TransactionEntity transaction, string categoryTitle) =>
         new TransactionGetDto
         {
@@ -38,8 +31,8 @@ public class TransactionController : ControllerBase
     [HttpGet]
     public async Task<IEnumerable<TransactionGetDto>> Get()
     {
-        var transactions = await _context.Transactions.ToListAsync();
-        var categories = await _context.Categories
+        var transactions = await context.Transactions.ToListAsync();
+        var categories = await context.Categories
             .ToDictionaryAsync(x => x.Id, x => x.Title);
         
         return transactions.Select(t =>
@@ -60,8 +53,8 @@ public class TransactionController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<TransactionGetDto>> GetById(Guid id)
     {
-        var transaction = await _context.Transactions.FindAsync(id);
-        var categories = await _context.Categories
+        var transaction = await context.Transactions.FindAsync(id);
+        var categories = await context.Categories
             .ToDictionaryAsync(x => x.Id, x => x.Title);
         if (transaction == null)
         {
@@ -83,7 +76,7 @@ public class TransactionController : ControllerBase
     [HttpPut("{id}")]
     public async Task<ActionResult<TransactionCreateDto>> Put(Guid id, TransactionCreateDto transactionDto)
     {
-        var transaction = await _context.Transactions.FindAsync(id);
+        var transaction = await context.Transactions.FindAsync(id);
         if (transaction == null) return NotFound();
         if (transactionDto.Amount <= 0)
         {
@@ -93,7 +86,7 @@ public class TransactionController : ControllerBase
         transaction.Amount = transactionDto.Amount;
         transaction.TransactionType = transactionDto.Type;
         transaction.CategoryId = transactionDto.CategoryId;
-        await _context.SaveChangesAsync();
+        await context.SaveChangesAsync();
         return Ok(transaction);
     }
 
@@ -103,7 +96,7 @@ public class TransactionController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<TransactionEntity>> Post(TransactionCreateDto transactionDto)
     {
-        var wallet = await _context.Wallets.FindAsync(transactionDto.WalletId);
+        var wallet = await context.Wallets.FindAsync(transactionDto.WalletId);
         if (wallet == null) return NotFound();
         
         if (transactionDto.Amount <= 0)
@@ -140,8 +133,8 @@ public class TransactionController : ControllerBase
             wallet.Balance += transaction.Amount;
         }
 
-        await _context.Transactions.AddAsync(transaction);
-        await _context.SaveChangesAsync();
+        await context.Transactions.AddAsync(transaction);
+        await context.SaveChangesAsync();
         return CreatedAtAction(nameof(Post), new { id = transaction.Id }, transaction);
     }
     
@@ -152,22 +145,20 @@ public class TransactionController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var transaction = await _context.Transactions.FindAsync(id);
+        var transaction = await context.Transactions.FindAsync(id);
         if(transaction == null) return NotFound();
-        _context.Transactions.Remove(transaction);
-        await _context.SaveChangesAsync();
+        context.Transactions.Remove(transaction);
+        await context.SaveChangesAsync();
         return NoContent();
     }
 
     /// <summary>
     /// get transactions by user and month
     /// </summary>
-    /// <param name="id"></param>
-    /// <returns></returns>
     [HttpGet("statistics")]
     public async Task<ActionResult<TransactionStatisticsResponseDto>> GetStatistics([FromQuery]TransactionStatisticsRequestDto requestDto)
     {
-        var result = await _context.Transactions
+        var result = await context.Transactions
             .Where(t => t.Wallet.UserId == requestDto.UserID &&
                         t.CreatedAt.Month == requestDto.Month &&
                         t.CreatedAt.Year == requestDto.Year &&

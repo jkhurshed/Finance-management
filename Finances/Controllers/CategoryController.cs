@@ -6,16 +6,9 @@ using Microsoft.EntityFrameworkCore;
 namespace Finances.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
-public class CategoryController : ControllerBase
+[Route("[controller]")]
+public class CategoryController(AppDbContext context) : ControllerBase
 {
-    private readonly AppDbContext _context;
-
-    public CategoryController(AppDbContext context)
-    {
-        _context = context;
-    }
-
     private static CategoryGetDto CategoryToDto(CategoryEntity category) =>
         new CategoryGetDto()
         {
@@ -27,10 +20,13 @@ public class CategoryController : ControllerBase
                 .ToList()
         };
     
+    /// <summary>
+    /// Get all existing categories
+    /// </summary>
     [HttpGet]
     public async Task<IEnumerable<CategoryGetDto>> Get()
     {
-        var categories = await _context.Categories
+        var categories = await context.Categories
             .Include(c => c.SubCategories)
             .ToListAsync();
 
@@ -49,29 +45,40 @@ public class CategoryController : ControllerBase
         return rootCategories.Select(CategoryToDto).ToList();
     }
 
+    /// <summary>
+    /// Provide category id to see detail info about this category
+    /// </summary>
+    /// <param name="id"></param>
     [HttpGet("{id}")]
     public async Task<ActionResult<CategoryEntity>> GetById(Guid id)
     {
-        var category = await _context.Categories
+        var category = await context.Categories
             .Include(c => c.SubCategories)
             .FirstOrDefaultAsync(c => c.Id == id);
 
         return category == null ? NotFound() : Ok(category);
     }
 
+    /// <summary>
+    /// Provide category id to update the information about the category.
+    /// </summary>
+    /// <param name="id"></param>
     [HttpPut("{id}")]
     public async Task<ActionResult<CategoryCreateDto>> Put(Guid id, CategoryCreateDto categoryDto)
     {
-        var category = await _context.Categories.FindAsync(id);
+        var category = await context.Categories.FindAsync(id);
         if (category == null) return BadRequest();
         category.Title = categoryDto.Title;
         category.Description = categoryDto.Description;
         category.Icon = categoryDto.Icon;
         category.ParentCategoryId = categoryDto.ParentCategoryId;
-        await _context.SaveChangesAsync();
+        await context.SaveChangesAsync();
         return Ok(category);
     }
 
+    /// <summary>
+    /// Create category
+    /// </summary>
     [HttpPost]
     public async Task<ActionResult<CategoryEntity>> Post(CategoryCreateDto categoryDto)
     {
@@ -82,18 +89,22 @@ public class CategoryController : ControllerBase
             Icon = categoryDto.Icon,
             ParentCategoryId = categoryDto.ParentCategoryId
         };
-        await _context.Categories.AddAsync(user);
-        await _context.SaveChangesAsync();
+        await context.Categories.AddAsync(user);
+        await context.SaveChangesAsync();
         return CreatedAtAction(nameof(Post), new { id = user.Id }, user);
     }
 
+    /// <summary>
+    /// Deleting a category by its id
+    /// </summary>
+    /// <param name="id"></param>
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var category = await _context.Categories.FindAsync(id);
+        var category = await context.Categories.FindAsync(id);
         if(category == null) return NotFound();
-        _context.Categories.Remove(category);
-        await _context.SaveChangesAsync();
+        context.Categories.Remove(category);
+        await context.SaveChangesAsync();
         return NoContent();
     }
 }
