@@ -46,5 +46,13 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<WalletEntity>()
             .Property(w => w.Balance)
             .HasPrecision(18, 2);
+
+        modelBuilder.Entity<UserEntity>()
+            .HasIndex(u => u.Email)
+            .IsUnique();
+
+        modelBuilder.Entity<CategoryEntity>()
+            .HasIndex(c => c.Title)
+            .IsUnique();
     }
 }

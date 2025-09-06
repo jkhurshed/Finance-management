@@ -29,6 +29,10 @@ public class UserController(AppDbContext context) : ControllerBase
             .ToListAsync());
     }
     
+    /// <summary>
+    /// Provide user id to see detail info about this user
+    /// </summary>
+    /// <param name="id"></param>
     [HttpGet("{id}")]
     [ProducesResponseType(typeof(UserEntity), statusCode: StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -89,5 +93,57 @@ public class UserController(AppDbContext context) : ControllerBase
         context.Users.Remove(userDelete);
         await context.SaveChangesAsync();
         return NoContent();
+    }
+        
+    /// <summary>
+    /// Get the user's transactions
+    /// </summary>
+    /// <param name="id"></param>
+    [HttpGet("UserTransactions/{id}")]
+    public async Task<ActionResult<TransactionEntity>> GetUsersTransactions(Guid id)
+    {
+        var transaction = await (
+            from t in context.Transactions
+            join w in context.Wallets on t.WalletId equals w.Id
+            join u in context.Users on w.UserId equals u.Id
+            where u.Id == id
+            select new UserTransactionsGetDto()
+            {
+                UserId = t.Id,
+                FullName = u.FullName,
+                TransactionTitle = t.Title,
+                Description = t.Description,
+                TransactionAmount = t.Amount,
+                TransactionType = t.TransactionType,
+                WalletTitle = w.Title,
+                CategoryId = t.CategoryId,
+                Date = t.CreatedAt
+            }
+        ).ToListAsync();
+        
+        return Ok(transaction);
+    }
+
+    /// <summary>
+    /// Get the user's total balance
+    /// </summary>
+    /// <param name="id"></param>
+    [HttpGet("UserTotal/{id}")]
+    public async Task<ActionResult<WalletEntity>> GetUsersTotalBalance(Guid id)
+    {
+        var totalBalance = await context.Wallets
+            .Include(x=>x.User)
+            .Where(w => w.UserId == id)
+            .GroupBy(w => w.UserId)
+            .Select(w => new UsersTotalAmountGetDto()
+                {
+                    UserId = w.Key,
+                    FullName = w.First().User.FullName,
+                    TotalAmount = w.Sum(t => t.Balance)
+                }
+            )
+            .ToListAsync();
+        
+        return Ok(totalBalance);
     }
 }

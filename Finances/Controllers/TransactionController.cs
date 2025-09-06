@@ -121,7 +121,7 @@ public class TransactionController(AppDbContext context) : ControllerBase
             Description = transactionDto.Description
         };
         
-        //Decreasing an amount of money if a transaction type is "Expense"
+        //Decreasing the amount of money if a transaction type is "Expense"
         if (transactionDto.Type == TransactionType.Expense)
         {
             wallet.Balance -= transaction.Amount;
@@ -170,6 +170,7 @@ public class TransactionController(AppDbContext context) : ControllerBase
                 CategoryName = g.Key.Title,
                 CategoryAmount = g.Sum(t => t.Amount)
             })
+            .OrderByDescending(t => t.CategoryAmount)
             .ToListAsync();
 
         var response = new TransactionStatisticsResponseDto()
