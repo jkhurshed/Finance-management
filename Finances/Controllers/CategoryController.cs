@@ -1,5 +1,6 @@
 using Finances.DTOs;
 using Finances.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -79,19 +80,20 @@ public class CategoryController(AppDbContext context) : ControllerBase
     /// <summary>
     /// Create category
     /// </summary>
-    [HttpPost]
+    [Authorize()]
+    [HttpPost("CreateCategory")]
     public async Task<ActionResult<CategoryEntity>> Post(CategoryCreateDto categoryDto)
     {
-        var user = new CategoryEntity()
+        var category = new CategoryEntity()
         {
             Title = categoryDto.Title,
             Description = categoryDto.Description,
             Icon = categoryDto.Icon,
             ParentCategoryId = categoryDto.ParentCategoryId
         };
-        await context.Categories.AddAsync(user);
+        await context.Categories.AddAsync(category);
         await context.SaveChangesAsync();
-        return CreatedAtAction(nameof(Post), new { id = user.Id }, user);
+        return CreatedAtAction(nameof(Post), new { id = category.Id }, category);
     }
 
     /// <summary>

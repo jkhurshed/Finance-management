@@ -1,5 +1,6 @@
 using Finances.DTOs;
 using Finances.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,8 +15,7 @@ public class UserController(AppDbContext context) : ControllerBase
         {
             Id = user.Id,
             FullName = user.FullName,
-            Email = user.Email,
-            Password = user.Password
+            Email = user.Email
         };
 
     /// <summary>
@@ -55,28 +55,11 @@ public class UserController(AppDbContext context) : ControllerBase
     {
         var user = await context.Users.FindAsync(id);
         if (user == null) return BadRequest();
-        user.FullName = userDto.FullName;
+        user.UserName = userDto.UserName;
         user.Email = userDto.Email;
-        user.Password = userDto.Password;
+        user.PasswordHash = userDto.Password;
         await context.SaveChangesAsync();
         return Ok(user);
-    }
-
-    /// <summary>
-    /// Provide user id to update the information about the user.
-    /// </summary>
-    [HttpPost]
-    public async Task<ActionResult<UserEntity>> Post(UserCreateDto userDto)
-    {
-        var user = new UserEntity
-        {
-            FullName = userDto.FullName,
-            Email = userDto.Email,
-            Password = userDto.Password
-        };
-        await context.Users.AddAsync(user);
-        await context.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetById), new { id = user.Id }, user);
     }
 
     /// <summary>
