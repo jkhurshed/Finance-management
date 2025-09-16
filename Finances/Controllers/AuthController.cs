@@ -13,7 +13,7 @@ namespace Finances.Controllers;
 [ApiController]
 [Route("[controller]")]
 [AllowAnonymous]
-public class AuthController(UserManager<UserEntity> userManager, IConfiguration config) : ControllerBase
+public class AuthController(UserManager<UserEntity> userManager, SignInManager<UserEntity> signInManager, IConfiguration config) : ControllerBase
 {
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterDto dto)
@@ -42,7 +42,9 @@ public class AuthController(UserManager<UserEntity> userManager, IConfiguration 
         var user = await userManager.FindByEmailAsync(dto.Email);
         if (user == null || !await userManager.CheckPasswordAsync(user, dto.Password))
             return Unauthorized();
-
+        await signInManager.SignOutAsync();
+        await signInManager.SignInAsync(user, false);
+        
         var token = GenerateJwtToken(user);
         return Ok(new { token });
     }
