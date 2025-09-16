@@ -80,8 +80,7 @@ public class CategoryController(AppDbContext context) : ControllerBase
     /// <summary>
     /// Create category
     /// </summary>
-    [Authorize()]
-    [HttpPost("CreateCategory")]
+    [HttpPost]
     public async Task<ActionResult<CategoryEntity>> Post(CategoryCreateDto categoryDto)
     {
         var category = new CategoryEntity()

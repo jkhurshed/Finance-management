@@ -4,6 +4,7 @@ using Microsoft.OpenApi.Models;
 using System.Reflection;
 using System.Text;
 using Finances.Models;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 
@@ -27,20 +28,19 @@ builder.Services.AddIdentity<UserEntity, IdentityRole<Guid>>(options =>
 
 // JWT Authentication
 var jwtSection = builder.Configuration.GetSection("Jwt");
-builder.Services.AddAuthentication("JwtBearer")
-    .AddJwtBearer("JwtBearer", options =>
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
     {
-        options.TokenValidationParameters = new()
+        options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-
-            ValidIssuer = jwtSection["Issuer"],
-            ValidAudience = jwtSection["Audience"],
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(jwtSection["Key"]))
+                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
         };
     });
 
